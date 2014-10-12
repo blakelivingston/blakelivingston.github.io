@@ -117,8 +117,6 @@
             GetWorld()-&gt;Scene,
             LocalPlayer-&gt;ViewportClient-&gt;EngineShowFlags)
             .SetRealtimeUpdate(true));
-
-        // Calculate a view where the player is to update the streaming from the players start location
         FVector ViewLocation;
         FRotator ViewRotation;
         FSceneView* SceneView = LocalPlayer-&gt;CalcSceneView(&amp;ViewFamily, /*out*/ ViewLocation, /*out*/ ViewRotation, LocalPlayer-&gt;ViewportClient-&gt;Viewport);
