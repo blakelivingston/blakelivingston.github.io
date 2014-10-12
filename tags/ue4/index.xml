@@ -10,11 +10,11 @@
     <updated>Sat, 11 Oct 2014 14:44:58 PDT</updated>
     
     <item>
-      <title>Snapping points onto the screen in Unreal Engine 4</title>
-      <link>http://blakelivingston.github.io/blog/2014/10/11/snapping-points-onto-the-screen-in-unreal-engine-4/</link>
+      <title>Snapping points into screen boundaries in Unreal Engine 4</title>
+      <link>http://blakelivingston.github.io/blog/2014/10/11/snapping-points-into-screen-boundaries-in-unreal-engine-4/</link>
       <pubDate>Sat, 11 Oct 2014 14:44:58 PDT</pubDate>
       <author>Blake Livingston</author>
-      <guid>http://blakelivingston.github.io/blog/2014/10/11/snapping-points-onto-the-screen-in-unreal-engine-4/</guid>
+      <guid>http://blakelivingston.github.io/blog/2014/10/11/snapping-points-into-screen-boundaries-in-unreal-engine-4/</guid>
       <description>
 
 &lt;p&gt;In the last month or so, I&amp;rsquo;ve had the privilege to really dive in to the excellent &lt;a href=&#34;https://www.unrealengine.com&#34;&gt;Unreal Engine 4&lt;/a&gt;, and I&amp;rsquo;m quite happy with its flexibility so far. Its documentation gets pretty sparse when the reader strays from the higher level functionality, but the code itself is well written, readable, and walk-able with Intellisense for those times when you just have to trace out what&amp;rsquo;s happening underneath the hood. But, getting to my point, there are some things which are surprisingly simple to do within a 2D game context, that can be kind of weird and kludgy inside of a state-of-the-art 3D game engine.&lt;/p&gt;
