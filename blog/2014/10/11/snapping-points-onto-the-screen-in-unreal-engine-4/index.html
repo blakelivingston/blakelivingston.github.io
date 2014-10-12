@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en-us">
+<head>
+  <link href="http://gmpg.org/xfn/11" rel="profile">
+  <meta http-equiv="content-type" content="text/html; charset=utf-8">
+
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1">
+
+  <title>Snapping points onto the screen in Unreal Engine 4 &middot; Blake Livingston</title>
+
+ <script src="//ajax.googleapis.com/ajax/libs/jquery/2.1.1/jquery.min.js"></script>
+  
+  <link rel="stylesheet" href="http://blakelivingston.github.io/css/poole.css">
+  <link rel="stylesheet" href="http://blakelivingston.github.io/css/hyde.css">
+  <link rel="stylesheet" href="http://blakelivingston.github.io/css/poole-overrides.css">
+  <link rel="stylesheet" href="http://blakelivingston.github.io/css/hyde-overrides.css">
+  <link rel="stylesheet" href="http://blakelivingston.github.io/css/hyde-x.css">
+  <link rel="stylesheet" href="http://blakelivingston.github.io/css/highlight/monokai.css">
+  <link rel="stylesheet" href="http://fonts.googleapis.com/css?family=PT+Sans:400,400italic,700|Abril+Fatface">
+
+  
+  <link rel="apple-touch-icon-precomposed" sizes="144x144" href="/apple-touch-icon-144-precomposed.png">
+  <link href="/favicon.png" rel="icon">
+
+  
+  <link href="" rel="alternate" type="application/rss+xml" title="Blake Livingston &middot; Blake Livingston" />
+
+  <meta name="description" content="A method to snap coordinates back into the player view frustum in UE4. I&#39;m using this for a side scrolling shooter where the camera may zoom in and out or change angles.">
+  <meta name="keywords" content="ue4,unreal engine,sidescroller,sceneview,shmup,shoot-em up,shootem up,ViewProjection">
+  <link rel="author" href="http://plus.google.com/107998343704938448054">
+</head>
+<body class="theme-base-0b">
+<div class="sidebar">
+  <div class="container sidebar-sticky">
+    <div class="sidebar-about">
+      <img src="http://www.gravatar.com/avatar/513e424b72146dcb6a967058cbb8fd18?s=100" alt="gravatar">
+      <h1>Blake Livingston</h1>
+      <p class="lead">Scattered writings and personal interests</p>
+    </div>
+
+    <ul class="sidebar-nav">
+      <li class="sidebar-nav-item"><a href="/">Posts</a></li>
+      
+    </ul>
+    <div class="sidebar-foot">
+	    <ul class="sidebar-nav">
+	      <li class="sidebar-nav-item"><a href="https://github.com/blakelivingston">GitHub</a></li>
+	      
+	      <li class="sidebar-nav-item"><a href="https://plus.google.com/u/0/107998343704938448054/posts">Google+</a></li>
+	      
+	      
+	    </ul>
+     
+        <p>Copyright &copy; 2014 Blake Livingston <br/>
+	
+          Powered by <a href="http://hugo.spf13.com">Hugo</a> and <a href="https://github.com/zyro/hyde-x">Hyde-X</a></p>
+
+<a rel="license" href="http://creativecommons.org/licenses/by-sa/4.0/"><img alt="Creative Commons License" style="border-width:0" src="https://i.creativecommons.org/l/by-sa/4.0/88x31.png" /></a>This work is licensed under a <a rel="license" href="http://creativecommons.org/licenses/by-sa/4.0/">Creative Commons Attribution-ShareAlike 4.0 International License</a>.<br/>
+    </div>
+  </div>
+</div>
+
+<div class="content container">
+  <div class="post">
+    <h1>Snapping points onto the screen in Unreal Engine 4</h1>
+    <span class="post-date">Oct 11, 2014 &middot; 5 minute read &middot; <a href="http://blakelivingston.github.io/blog/2014/10/11/snapping-points-onto-the-screen-in-unreal-engine-4/#disqus_thread">Comments</a></span>
+    
+
+<p>In the last month or so, I&rsquo;ve had the privilege to really dive in to the excellent <a href="https://www.unrealengine.com">Unreal Engine 4</a>, and I&rsquo;m quite happy with its flexibility so far. Its documentation gets pretty sparse when the reader strays from the higher level functionality, but the code itself is well written, readable, and walk-able with Intellisense for those times when you just have to trace out what&rsquo;s happening underneath the hood. But, getting to my point, there are some things which are surprisingly simple to do within a 2D game context, that can be kind of weird and kludgy inside of a state-of-the-art 3D game engine.</p>
+
+<p>The first of these that I ran into on my adventure to create a 2D(ish) side scroller was keeping the player on screen and detecting whether or not enemies were also within the view bounds.</p>
+
+<p>As you might imagine, there are many ways to accomplish both of these things. I&rsquo;m not sure if the following is the best way, but it&rsquo;s working for me.</p>
+
+<h2 id="toc_0">Mimes in invisible prisons</h2>
+
+<p>The first solution that came to mind for keeping a player pawn pushed onto the screen, and one that is mentioned numerous times in the forums, is to create collision objects at the screen boundaries, that are swept along with the camera movement.</p>
+
+<p><img src="/img/sweepbox.png" alt="Image of sweeped collision boxes" />
+</p>
+
+<p>I tried this out, and it worked OK, for the most part. It&rsquo;s probably also working OK for many others too - but it felt kind of messy and has some shortfalls. For instance, it is a pain to position the collision blocks for different camera FOVs and screen aspect ratios. Certainly not <em>impossible</em>, but  it is a pain. In fact, doing so correctly (to exactly match the view projection) is a significant step towards implementing the method that I&rsquo;m about to describe. Also, unless the collision boxes on the borders of the screen are aligned to the walls of the <a href="http://en.wikipedia.org/wiki/Viewing_frustum">view frustum</a> it will only work nicely for a small area of depth. That is, objects in the foreground closer to the camera or far away wouldn&rsquo;t be hit properly by the boxes.</p>
+
+<p>These are some important catches for my use case, since I would like to have more free-form scrolling with orientation changes and zooming.</p>
+
+<p>So, how can you find the nearest on-screen point for a given viewport and potentially off-screen location? It takes some digging, but it can be done cleanly using the <a href="https://docs.unrealengine.com/latest/INT/API/Runtime/Engine/FSceneView/ViewProjectionMatrix/index.html">ViewProjectionMatrix</a> data in <a href="https://docs.unrealengine.com/latest/INT/API/Runtime/Engine/FSceneView/index.html">FSceneView</a>.</p>
+
+<h2 id="toc_1">Keeping things in perspective</h2>
+
+<p>To see how to do this, we have to peek briefly into the process of how all of the vertices in the 3D world are transformed into 2D screen coordinates for rendering. The interested reader can find a very good step by step breakdown of this process on <a href="http://www.scratchapixel.com/lessons/3d-advanced-lessons/perspective-and-orthographic-projection-matrix/perspective-projection-matrix/">scratchapixel.com</a> but for this article, a quick hand-wavey explanation follows.</p>
+
+<p>The interesting twist in the process of projecting a 3D world into a 2D viewport is that, conceptually, the camera is always in one place, pointing on one direction and it is actually the world that is moved and deformed (for perspective), around it to make it appear that the camera is moving around inside of the world. In the case of a perspective projection of the world, everything that is visible to the camera frustum is transformed into the <a href="http://www.gamerendering.com/2008/10/05/clip-space/">clip space</a> of &lsquo;cube&rsquo;.</p>
+
+<p>In the particular case of the Unreal Engine, the camera is positioned at the origin (0, 0, 0) , and looking into the Z axis. From the UE4 <a href="https://docs.unrealengine.com/latest/INT/Engine/Basics/CoordinateSpace/index.html">Coordinate space terminology page</a>, this is the View Space.</p>
+
+<p>The important property of this coordinate space is that every point on the screen, <em>regardless of depth</em>, is mapped from -1 to 1 on the X and Y coordinates. For example, a mountain far in the distance, that you view on the far left side of the screen will have an X coordinate near -1. The bullet shell also flying off of the left side of the screen very near to the viewer will also have an X coordinate close to -1, even though in world-space the mountain is much further away in the negative x direction relative to the player&rsquo;s orientation.</p>
+
+<p><img src="/img/frustum_to_view.png" alt="Illustration of view frustum tranformation into View-Space" />
+</p>
+
+<p>So, the trick is that once the position of the object to be limited to screen bounds is transformed into view-space, all that is needed is to clamp its X and Y position to (-1, 1) and then transform it back into world space by using the inverse projection matrix. If an object is snapped back onto the screen in this way, it will be as if its world-space position were moved just back onto screen, keeping the same Z depth relative to the viewer.</p>
+
+<h2 id="toc_2">Show me the code</h2>
+
+<p>Here is the implementation that I ended up using. I made it a part of the PlayerController child class, but I think that it could probably be argued that it doesn&rsquo;t belong there. It does require access to a LocalPlayer class in order to get the SceneView data for a particular player view, so there is also the caveat that this probably won&rsquo;t work on a dedicated server unless one takes the trouble to replicate the LocalPlayer on the server-side. I haven&rsquo;t looked into it, but if anyone has done this, I&rsquo;d really love to hear about the method.</p>
+
+<pre><code>bool ACosmicDebrisPlayerController::SnapToViewFrustum(const FVector&amp; worldPosition, FVector* outSnapped) {
+    // SceneView initialization gently adapted from APlayerController::ProjectWorldLocationToScreen.
+    ULocalPlayer* LocalPlayer = Cast&lt;ULocalPlayer&gt;(Player);
+    if (LocalPlayer != NULL &amp;&amp; LocalPlayer-&gt;ViewportClient != NULL &amp;&amp; LocalPlayer-&gt;ViewportClient-&gt;Viewport != NULL)
+    {
+        // This sceneview initialization should probably be moved into another function.
+        // Create a view family for the game viewport
+        FSceneViewFamilyContext ViewFamily(FSceneViewFamily::ConstructionValues(
+            LocalPlayer-&gt;ViewportClient-&gt;Viewport,
+            GetWorld()-&gt;Scene,
+            LocalPlayer-&gt;ViewportClient-&gt;EngineShowFlags)
+            .SetRealtimeUpdate(true));
+
+        // Calculate a view where the player is to update the streaming from the players start location
+        FVector ViewLocation;
+        FRotator ViewRotation;
+        FSceneView* SceneView = LocalPlayer-&gt;CalcSceneView(&amp;ViewFamily, /*out*/ ViewLocation, /*out*/ ViewRotation, LocalPlayer-&gt;ViewportClient-&gt;Viewport);
+
+        if (SceneView)
+        {
+            // Transform our world position into projection coordinates.
+            auto ProjPosAug = SceneView-&gt;ViewProjectionMatrix.TransformPosition(worldPosition);
+            FVector ProjPos(ProjPosAug);
+            // Divide by the augmented coord W value.
+            ProjPos /= ProjPosAug.W;
+            // Clamp position to -1,1 on x and y (corresponds to on-screen)
+            ProjPos.X = FMath::Clamp&lt;float&gt;(ProjPos.X, -1, 1);
+            ProjPos.Y = FMath::Clamp&lt;float&gt;(ProjPos.Y, -1, 1);
+            // Invert the transform back to world space.
+            auto AugWorldSnapped = SceneView-&gt;InvViewProjectionMatrix.TransformPosition(ProjPos);
+            FVector SnapPos(AugWorldSnapped);
+            SnapPos /= AugWorldSnapped.W;
+            *outSnapped = SnapPos;
+            return true;
+        }
+    }
+    return false;
+}
+</code></pre>
+
+  </div>
+  <div class="ad-bottom">
+	
+<script type="text/javascript">
+
+$( function() {
+	if (window.location.href.indexOf("192.168.1.10") > -1 ) {
+		$("#ad").hide()
+		$("#fakead").show()
+	} else {
+		$("#ad").show()
+		$("#fakead").hide()
+	}
+}
+)
+</script>
+
+<div id="ad" class="ad-initialhidden">
+<script async src="//pagead2.googlesyndication.com/pagead/js/adsbygoogle.js"></script>
+
+<ins class="adsbygoogle"
+     style="display:inline-block;width:728px;height:90px"
+     data-ad-client="ca-pub-6453368893162304"
+     data-ad-slot="4319692463"></ins>
+<script>
+(adsbygoogle = window.adsbygoogle || []).push({});
+</script>
+</div>
+
+<img id="fakead" src="/img/728x90_ad_placeholder.png"></img>
+	
+  </div>
+  <div id="disqus_thread"></div>
+</div>
+
+
+<script type="text/javascript">
+var disqus_shortname = "blakelivingston-net";
+(function () {
+    var s = document.createElement('script'); s.async = true;
+    s.type = 'text/javascript';
+    s.src = '//' + disqus_shortname + '.disqus.com/count.js';
+    (document.getElementsByTagName('HEAD')[0] || document.getElementsByTagName('BODY')[0]).appendChild(s);
+}());
+</script>
+
+
+
+<script type="text/javascript">
+    var disqus_shortname = "blakelivingston-net";
+    (function() {
+        var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+        dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+        (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+    })();
+</script>
+<noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+<a href="http://disqus.com" class="dsq-brlink">comments powered by <span class="logo-disqus">Disqus</span></a>
+
+<script src="http://blakelivingston.github.io/js/highlight.pack.js"></script>
+<script>hljs.initHighlightingOnLoad();</script>
+
+<script>
+  var _gaq=[['_setAccount','UA-55533067-1'],['_trackPageview']];
+  (function(d,t){var g=d.createElement(t),s=d.getElementsByTagName(t)[0];
+  g.src=('https:'==location.protocol?'//ssl':'//www')+'.google-analytics.com/ga.js';
+  s.parentNode.insertBefore(g,s)}(document,'script'));
+</script>
+
+</body>
+</html>

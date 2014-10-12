@@ -1,0 +1,101 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+      <title>Ue4 on Blake Livingston </title>
+      <generator uri="https://gohugo.io">Hugo</generator>
+    <link>http://blakelivingston.github.io/tags/ue4/index.xml/</link>
+    <language>en-us</language>
+    <author>Blake Livingston</author>
+    
+    <updated>Sat, 11 Oct 2014 14:44:58 PDT</updated>
+    
+    <item>
+      <title>Snapping points onto the screen in Unreal Engine 4</title>
+      <link>http://blakelivingston.github.io/blog/2014/10/11/snapping-points-onto-the-screen-in-unreal-engine-4/</link>
+      <pubDate>Sat, 11 Oct 2014 14:44:58 PDT</pubDate>
+      <author>Blake Livingston</author>
+      <guid>http://blakelivingston.github.io/blog/2014/10/11/snapping-points-onto-the-screen-in-unreal-engine-4/</guid>
+      <description>
+
+&lt;p&gt;In the last month or so, I&amp;rsquo;ve had the privilege to really dive in to the excellent &lt;a href=&#34;https://www.unrealengine.com&#34;&gt;Unreal Engine 4&lt;/a&gt;, and I&amp;rsquo;m quite happy with its flexibility so far. Its documentation gets pretty sparse when the reader strays from the higher level functionality, but the code itself is well written, readable, and walk-able with Intellisense for those times when you just have to trace out what&amp;rsquo;s happening underneath the hood. But, getting to my point, there are some things which are surprisingly simple to do within a 2D game context, that can be kind of weird and kludgy inside of a state-of-the-art 3D game engine.&lt;/p&gt;
+
+&lt;p&gt;The first of these that I ran into on my adventure to create a 2D(ish) side scroller was keeping the player on screen and detecting whether or not enemies were also within the view bounds.&lt;/p&gt;
+
+&lt;p&gt;As you might imagine, there are many ways to accomplish both of these things. I&amp;rsquo;m not sure if the following is the best way, but it&amp;rsquo;s working for me.&lt;/p&gt;
+
+&lt;h2 id=&#34;toc_0&#34;&gt;Mimes in invisible prisons&lt;/h2&gt;
+
+&lt;p&gt;The first solution that came to mind for keeping a player pawn pushed onto the screen, and one that is mentioned numerous times in the forums, is to create collision objects at the screen boundaries, that are swept along with the camera movement.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&#34;/img/sweepbox.png&#34; alt=&#34;Image of sweeped collision boxes&#34; /&gt;
+&lt;/p&gt;
+
+&lt;p&gt;I tried this out, and it worked OK, for the most part. It&amp;rsquo;s probably also working OK for many others too - but it felt kind of messy and has some shortfalls. For instance, it is a pain to position the collision blocks for different camera FOVs and screen aspect ratios. Certainly not &lt;em&gt;impossible&lt;/em&gt;, but  it is a pain. In fact, doing so correctly (to exactly match the view projection) is a significant step towards implementing the method that I&amp;rsquo;m about to describe. Also, unless the collision boxes on the borders of the screen are aligned to the walls of the &lt;a href=&#34;http://en.wikipedia.org/wiki/Viewing_frustum&#34;&gt;view frustum&lt;/a&gt; it will only work nicely for a small area of depth. That is, objects in the foreground closer to the camera or far away wouldn&amp;rsquo;t be hit properly by the boxes.&lt;/p&gt;
+
+&lt;p&gt;These are some important catches for my use case, since I would like to have more free-form scrolling with orientation changes and zooming.&lt;/p&gt;
+
+&lt;p&gt;So, how can you find the nearest on-screen point for a given viewport and potentially off-screen location? It takes some digging, but it can be done cleanly using the &lt;a href=&#34;https://docs.unrealengine.com/latest/INT/API/Runtime/Engine/FSceneView/ViewProjectionMatrix/index.html&#34;&gt;ViewProjectionMatrix&lt;/a&gt; data in &lt;a href=&#34;https://docs.unrealengine.com/latest/INT/API/Runtime/Engine/FSceneView/index.html&#34;&gt;FSceneView&lt;/a&gt;.&lt;/p&gt;
+
+&lt;h2 id=&#34;toc_1&#34;&gt;Keeping things in perspective&lt;/h2&gt;
+
+&lt;p&gt;To see how to do this, we have to peek briefly into the process of how all of the vertices in the 3D world are transformed into 2D screen coordinates for rendering. The interested reader can find a very good step by step breakdown of this process on &lt;a href=&#34;http://www.scratchapixel.com/lessons/3d-advanced-lessons/perspective-and-orthographic-projection-matrix/perspective-projection-matrix/&#34;&gt;scratchapixel.com&lt;/a&gt; but for this article, a quick hand-wavey explanation follows.&lt;/p&gt;
+
+&lt;p&gt;The interesting twist in the process of projecting a 3D world into a 2D viewport is that, conceptually, the camera is always in one place, pointing on one direction and it is actually the world that is moved and deformed (for perspective), around it to make it appear that the camera is moving around inside of the world. In the case of a perspective projection of the world, everything that is visible to the camera frustum is transformed into the &lt;a href=&#34;http://www.gamerendering.com/2008/10/05/clip-space/&#34;&gt;clip space&lt;/a&gt; of &amp;lsquo;cube&amp;rsquo;.&lt;/p&gt;
+
+&lt;p&gt;In the particular case of the Unreal Engine, the camera is positioned at the origin (0, 0, 0) , and looking into the Z axis. From the UE4 &lt;a href=&#34;https://docs.unrealengine.com/latest/INT/Engine/Basics/CoordinateSpace/index.html&#34;&gt;Coordinate space terminology page&lt;/a&gt;, this is the View Space.&lt;/p&gt;
+
+&lt;p&gt;The important property of this coordinate space is that every point on the screen, &lt;em&gt;regardless of depth&lt;/em&gt;, is mapped from -1 to 1 on the X and Y coordinates. For example, a mountain far in the distance, that you view on the far left side of the screen will have an X coordinate near -1. The bullet shell also flying off of the left side of the screen very near to the viewer will also have an X coordinate close to -1, even though in world-space the mountain is much further away in the negative x direction relative to the player&amp;rsquo;s orientation.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&#34;/img/frustum_to_view.png&#34; alt=&#34;Illustration of view frustum tranformation into View-Space&#34; /&gt;
+&lt;/p&gt;
+
+&lt;p&gt;So, the trick is that once the position of the object to be limited to screen bounds is transformed into view-space, all that is needed is to clamp its X and Y position to (-1, 1) and then transform it back into world space by using the inverse projection matrix. If an object is snapped back onto the screen in this way, it will be as if its world-space position were moved just back onto screen, keeping the same Z depth relative to the viewer.&lt;/p&gt;
+
+&lt;h2 id=&#34;toc_2&#34;&gt;Show me the code&lt;/h2&gt;
+
+&lt;p&gt;Here is the implementation that I ended up using. I made it a part of the PlayerController child class, but I think that it could probably be argued that it doesn&amp;rsquo;t belong there. It does require access to a LocalPlayer class in order to get the SceneView data for a particular player view, so there is also the caveat that this probably won&amp;rsquo;t work on a dedicated server unless one takes the trouble to replicate the LocalPlayer on the server-side. I haven&amp;rsquo;t looked into it, but if anyone has done this, I&amp;rsquo;d really love to hear about the method.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;bool ACosmicDebrisPlayerController::SnapToViewFrustum(const FVector&amp;amp; worldPosition, FVector* outSnapped) {
+    // SceneView initialization gently adapted from APlayerController::ProjectWorldLocationToScreen.
+    ULocalPlayer* LocalPlayer = Cast&amp;lt;ULocalPlayer&amp;gt;(Player);
+    if (LocalPlayer != NULL &amp;amp;&amp;amp; LocalPlayer-&amp;gt;ViewportClient != NULL &amp;amp;&amp;amp; LocalPlayer-&amp;gt;ViewportClient-&amp;gt;Viewport != NULL)
+    {
+        // This sceneview initialization should probably be moved into another function.
+        // Create a view family for the game viewport
+        FSceneViewFamilyContext ViewFamily(FSceneViewFamily::ConstructionValues(
+            LocalPlayer-&amp;gt;ViewportClient-&amp;gt;Viewport,
+            GetWorld()-&amp;gt;Scene,
+            LocalPlayer-&amp;gt;ViewportClient-&amp;gt;EngineShowFlags)
+            .SetRealtimeUpdate(true));
+
+        // Calculate a view where the player is to update the streaming from the players start location
+        FVector ViewLocation;
+        FRotator ViewRotation;
+        FSceneView* SceneView = LocalPlayer-&amp;gt;CalcSceneView(&amp;amp;ViewFamily, /*out*/ ViewLocation, /*out*/ ViewRotation, LocalPlayer-&amp;gt;ViewportClient-&amp;gt;Viewport);
+
+        if (SceneView)
+        {
+            // Transform our world position into projection coordinates.
+            auto ProjPosAug = SceneView-&amp;gt;ViewProjectionMatrix.TransformPosition(worldPosition);
+            FVector ProjPos(ProjPosAug);
+            // Divide by the augmented coord W value.
+            ProjPos /= ProjPosAug.W;
+            // Clamp position to -1,1 on x and y (corresponds to on-screen)
+            ProjPos.X = FMath::Clamp&amp;lt;float&amp;gt;(ProjPos.X, -1, 1);
+            ProjPos.Y = FMath::Clamp&amp;lt;float&amp;gt;(ProjPos.Y, -1, 1);
+            // Invert the transform back to world space.
+            auto AugWorldSnapped = SceneView-&amp;gt;InvViewProjectionMatrix.TransformPosition(ProjPos);
+            FVector SnapPos(AugWorldSnapped);
+            SnapPos /= AugWorldSnapped.W;
+            *outSnapped = SnapPos;
+            return true;
+        }
+    }
+    return false;
+}
+&lt;/code&gt;&lt;/pre&gt;
+</description>
+    </item>
+    
+  </channel>
+</rss>

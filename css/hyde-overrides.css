@@ -1,0 +1,67 @@
+/*
+ * Tweaks and overrides to hyde.css
+ */
+
+@media (min-width: 48em) {
+  .sidebar-sticky {
+    position: absolute;
+    right:  .25rem;
+    top: 1rem;
+    left:   .25rem;
+  }
+}
+/* About section */
+.sidebar-about h1 {
+  color: #fff;
+  margin-top: 0;
+  font-family: "Abril Fatface", serif;
+  font-size: 1.7rem;
+}
+
+/* About section */
+.sidebar-about p {
+
+  font-size: 1.2rem;
+}
+
+
+/* Green */
+.theme-base-0b .sidebar {
+  background-color: #207929;
+}
+.theme-base-0b .content a,
+.theme-base-0b .related-posts li a:hover {
+  color: #90a959;
+}
+.sidebar-nav {
+  padding-left: 0;
+  list-style: none;
+  margin-bottom: 1rem;
+}
+
+.sidebar-foot {
+
+    text-align: left;
+}
+
+@media (min-width: 48em) {
+  .sidebar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 14rem;
+    text-align: left;
+  }
+}
+
+.content {
+
+}
+
+.ad-bottom {
+	width:720px;
+}
+
+.ad-initialhidden {
+	display: none;
+}

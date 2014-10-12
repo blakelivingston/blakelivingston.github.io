@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  
+  <url>
+    <loc>http://blakelivingston.github.io/</loc>
+    <lastmod>2014-10-11T14:50:32-07:00</lastmod>
+    <priority>0</priority>
+  </url>
+  
+  <url>
+    <loc>http://blakelivingston.github.io/license/</loc>
+    <lastmod>2014-10-11T14:50:32-07:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>http://blakelivingston.github.io/blog/2014/10/11/snapping-points-onto-the-screen-in-unreal-engine-4/</loc>
+    <lastmod>2014-10-11T14:44:58-07:00</lastmod>
+  </url>
+  
+</urlset>
