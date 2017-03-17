@@ -1,0 +1,124 @@
+.meme-view {
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -khtml-user-select: none;
+  -ms-user-select: none;
+  display: inline-block;
+  position: absolute;
+  left: 0;
+  top: 0; }
+
+.body-class {
+  overflow: hidden;
+  scroll: no;
+  margin: 0;
+  border: 0;
+  padding: 0;
+  width: 100%;
+  height: 100%; }
+
+.select {
+  pointer-events: none;
+  fill: #ff0000;
+  opacity: 0.15; }
+
+.select-border {
+  cursor: move;
+  vector-effect: non-scaling-stroke;
+  stroke-width: 4px;
+  fill: none;
+  stroke: #33ffff;
+  stroke-dasharray: 2px, 2px; }
+
+.select-invisible-border {
+  cursor: move;
+  vector-effect: non-scaling-stroke;
+  stroke-width: 0.8em;
+  stroke-opacity: 0;
+  fill: none;
+  stroke: #00ff00; }
+
+.select-scale-handle {
+  vector-effect: non-scaling-stroke;
+  stroke: #00ff00;
+  fill-opacity: 0;
+  stroke-width: 0.2em; }
+
+.select-rotate-handle {
+  vector-effect: non-scaling-stroke;
+  stroke: #00ff00;
+  fill-opacity: 0;
+  stroke-width: 0.2em; }
+
+.upload-dialog {
+  border-style: solid;
+  display: inline-block; }
+
+.meme-page-container {
+  margin: 0;
+  border: 0;
+  padding: 0;
+  height: 100%; }
+
+.meme-table {
+  height: 100%;
+  width: 100%;
+  margin: 0;
+  border: 0;
+  padding: 0; }
+
+.meme-page-leftbar {
+  width: 15em;
+  height: 100%;
+  position: absolute;
+  left: 0em;
+  background-color: #50ff50; }
+
+.meme-viewport {
+  position: absolute;
+  left: 15em;
+  right: 0;
+  margin: 0;
+  border: 0;
+  padding: 0;
+  background-color: white;
+  height: 100%; }
+
+.canvas-drapes {
+  fill: rgba(0, 0, 0, 0.88);
+  shape-rendering: crispEdges;
+  pointer-events: none; }
+
+.clear {
+  clear: both; }
+
+.panel-thumbnail {
+  height: 1.25em; }
+
+.meme-list-group {
+  margin-left: 0.4em; }
+
+.selected-elem {
+  background-color: #dc7878; }
+
+.del-cell {
+  vertical-align: top;
+  white-space: nowrap; }
+
+.del-button {
+  vertical-align: top;
+  color: #b40000; }
+
+.meme-elem {
+  width: 99%;
+  vertical-align: top;
+  text-align: left; }
+
+.meme-elem-table {
+  width: 100%;
+  vertical-align: top; }
+
+.clear-all {
+  clear: both; }
+
+/*# sourceMappingURL=memeport.css.map */
