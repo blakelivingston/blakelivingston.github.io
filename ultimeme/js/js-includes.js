@@ -2018,6 +2018,7 @@ if (typeof Object.create === 'function') {
 },{}],6:[function(require,module,exports){
 // ffmpeg = require("./ffmpeg-webm.js");
 animated_gif_detector = require("animated-gif-detector");
+//ffmpeg = require("./ffmpeg-worker-webm.js");
 Buffer = require("buffer/").Buffer
 },{"animated-gif-detector":1,"buffer/":3}],7:[function(require,module,exports){
 arguments[4][2][0].apply(exports,arguments)
