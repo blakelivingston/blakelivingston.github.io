@@ -3,6 +3,7 @@
   -moz-user-select: none;
   -khtml-user-select: none;
   -ms-user-select: none;
+  -ms-user-select: none;
   display: inline-block;
   position: absolute;
   left: 0;
@@ -52,7 +53,25 @@
 
 .upload-dialog {
   border-style: solid;
-  display: inline-block; }
+  left: 30%;
+  right: 30%;
+  top: 30%;
+  bottom: 30%;
+  position: absolute;
+  display: inline-block;
+  color: #000000;
+  background-color: #b4b4b4; }
+
+.save-dialog {
+  border-style: solid;
+  left: 10%;
+  right: 10%;
+  top: 10%;
+  bottom: 10%;
+  position: absolute;
+  display: inline-block;
+  color: #000000;
+  background-color: #b4b4b4; }
 
 .meme-page-container {
   margin: 0;
@@ -68,26 +87,29 @@
   padding: 0; }
 
 .meme-page-leftbar {
-  width: 15em;
-  height: 100%;
+  width: 100%;
+  z-index: 0;
+  height: 15em;
   position: absolute;
   left: 0em;
-  background-color: #50ff50; }
+  overflow-x: hidden;
+  background-color: #5a5a6e; }
 
 .meme-viewport {
   position: absolute;
-  left: 15em;
+  left: 0;
   right: 0;
+  top: 15em;
   margin: 0;
   border: 0;
   padding: 0;
   background-color: white;
-  height: 100%; }
-
-.canvas-drapes {
-  fill: rgba(0, 0, 0, 0.88);
-  shape-rendering: crispEdges;
-  pointer-events: none; }
+  height: 100%;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  -o-user-select: none;
+  user-select: none; }
 
 .clear {
   clear: both; }
@@ -99,26 +121,34 @@
   margin-left: 0.4em; }
 
 .selected-elem {
-  background-color: #dc7878; }
-
-.del-cell {
-  vertical-align: top;
-  white-space: nowrap; }
-
-.del-button {
-  vertical-align: top;
-  color: #b40000; }
+  background-color: #b46464; }
 
 .meme-elem {
-  width: 99%;
-  vertical-align: top;
-  text-align: left; }
+  width: 100%; }
+
+.meme-elem-label {
+  width: 10%; }
 
 .meme-elem-table {
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -khtml-user-select: none;
+  -ms-user-select: none;
+  -ms-user-select: none;
   width: 100%;
-  vertical-align: top; }
+  border: 1px; }
 
 .clear-all {
   clear: both; }
+
+.modal-overlay {
+  z-index: 100;
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.7);
+  color: white;
+  top: 0;
+  left: 0; }
 
 /*# sourceMappingURL=memeport.css.map */
