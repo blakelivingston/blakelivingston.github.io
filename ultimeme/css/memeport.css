@@ -89,7 +89,7 @@
 .meme-page-leftbar {
   width: 100%;
   z-index: 0;
-  height: 15em;
+  height: 19em;
   position: absolute;
   left: 0em;
   overflow-x: hidden;
@@ -99,12 +99,12 @@
   position: absolute;
   left: 0;
   right: 0;
-  top: 15em;
+  top: 19em;
   margin: 0;
   border: 0;
   padding: 0;
   background-color: white;
-  height: calc(100% - 15em);
+  height: calc(100% - 19em);
   -webkit-user-select: none;
   -moz-user-select: none;
   -ms-user-select: none;
